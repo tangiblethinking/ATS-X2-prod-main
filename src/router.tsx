@@ -6,8 +6,8 @@ export function getRouter() {
   return createRouter({
     routeTree,
     defaultErrorComponent: AppErrorComponent,
-    // Browser URL is /job on uxapex.com; match routes relative to that.
-    basepath: "/job",
+    // Base path matches the /jobs prefix used by the domain router.
+    basepath: "/jobs",
     trailingSlash: "never",
   });
 }

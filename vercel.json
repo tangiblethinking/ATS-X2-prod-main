@@ -1,10 +1,10 @@
 {
   "rewrites": [
-    { "source": "/job/assets/:path*", "destination": "/assets/:path*" },
-    { "source": "/job/_serverFn/:path*", "destination": "/_serverFn/:path*" },
-    { "source": "/job/__grok/:path*", "destination": "/__grok/:path*" },
-    { "source": "/job", "destination": "/" },
-    { "source": "/job/", "destination": "/" },
-    { "source": "/job/:path*", "destination": "/:path*" }
+    { "source": "/jobs/assets/:path*", "destination": "/assets/:path*" },
+    { "source": "/jobs/_serverFn/:path*", "destination": "/_serverFn/:path*" },
+    { "source": "/jobs/__grok/:path*", "destination": "/__grok/:path*" },
+    { "source": "/jobs", "destination": "/" },
+    { "source": "/jobs/", "destination": "/" },
+    { "source": "/jobs/:path*", "destination": "/:path*" }
   ]
 }

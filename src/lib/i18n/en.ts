@@ -65,6 +65,7 @@ export const en = {
   tip: "Just a quick helpful note — click through all the next steps here first before actually doing them and you'll have an even easier time getting all set up.",
   gotIt: "Got it!",
   haveKey: "Great! Just paste your Gemini key in the box below (where it says “Paste your Gemini key here…”) and hit the check button. I’ll save it for you automatically.",
+  showMeHowToGetIt: "Show me how to get it",
   step1: "First, open Google AI Studio’s API keys page. Click the link below — a new tab will open so you can come back to this tab anytime for help.\n\nhttps://aistudio.google.com/api-keys\n\nSign in with your Google account if it asks. (First time? You’ll accept a short terms notice — that’s normal.)",
   imOnThePage: "I’m on the page",
   openAiStudio: "Open Google AI Studio API keys",

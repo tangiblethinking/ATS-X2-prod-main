@@ -54,6 +54,7 @@ export const es: Record<TranslationKey, string> = {
   tip: "Solo una nota rápida — haz clic en todos los siguientes pasos aquí primero antes de hacerlos realmente y te será aún más fácil configurarlo.",
   gotIt: "¡Entendido!",
   haveKey: "¡Genial! Solo pega tu clave de Gemini en el cuadro de abajo (donde dice “Pega tu clave de Gemini aquí…”) y pulsa el botón de verificación. La guardaré automáticamente.",
+  showMeHowToGetIt: "Muéstrame cómo obtenerla",
   step1: "Primero, abre la página de claves de API de Google AI Studio. Haz clic en el enlace de abajo — se abrirá una nueva pestaña para que puedas volver a esta cuando quieras ayuda.\n\nhttps://aistudio.google.com/api-keys\n\nInicia sesión con tu cuenta de Google si te lo pide. (¿Primera vez? Aceptarás un breve aviso de términos — es normal.)",
   imOnThePage: "Estoy en la página",
   openAiStudio: "Abrir claves de API de Google AI Studio",

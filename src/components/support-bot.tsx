@@ -62,6 +62,7 @@ const STEPS: Record<Step, { textKey: TranslationKey; buttons?: { labelKey: Trans
   },
   haveKey: {
     textKey: "haveKey",
+    buttons: [{ labelKey: "showMeHowToGetIt", next: "tip" }],
   },
   step1: {
     textKey: "step1",

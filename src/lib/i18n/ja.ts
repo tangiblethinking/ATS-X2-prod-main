@@ -54,6 +54,7 @@ export const ja: Record<TranslationKey, string> = {
   tip: "簡単なヒント — 実際に行う前に、まずここですべての次のステップをクリックすると、セットアップがさらに簡単になります。",
   gotIt: "了解！",
   haveKey: "素晴らしい！下のボックスにGeminiキーを貼り付けて（「ここにGeminiキーを貼り付けて…」と表示されている場所）、チェックボタンを押してください。自動的に保存します。",
+  showMeHowToGetIt: "取得方法を教えてください",
   step1: "まず、Google AI StudioのAPIキーページを開いてください。下のリンクをクリック — 新しいタブが開き、いつでもこのタブに戻って助けを得られます。\n\nhttps://aistudio.google.com/api-keys\n\n求められたらGoogleアカウントでサインインしてください。（初めてですか？短い利用規約の通知を受け入れることになります — これは普通です。）",
   imOnThePage: "ページにいます",
   openAiStudio: "Google AI Studio APIキーを開く",

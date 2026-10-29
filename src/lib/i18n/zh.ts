@@ -54,6 +54,7 @@ export const zh: Record<TranslationKey, string> = {
   tip: "快速提示 — 先点击这里的所有后续步骤，然后再实际操作，这样设置会更容易。",
   gotIt: "明白了！",
   haveKey: "太好了！只需在下方框中粘贴你的 Gemini 密钥（显示“在此粘贴你的 Gemini 密钥…”的地方），然后点击勾选按钮。我会自动为你保存。",
+  showMeHowToGetIt: "告诉我如何获取它",
   step1: "首先，打开 Google AI Studio 的 API 密钥页面。点击下面的链接 — 将打开一个新标签页，这样你可以随时返回此标签页寻求帮助。\n\nhttps://aistudio.google.com/api-keys\n\n如果提示，请使用你的 Google 账户登录。（第一次？你会接受一个简短的条款通知 — 这是正常的。）",
   imOnThePage: "我已在页面上",
   openAiStudio: "打开 Google AI Studio API 密钥",

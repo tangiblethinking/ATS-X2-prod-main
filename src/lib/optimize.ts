@@ -495,3 +495,52 @@ Be specific and human. No clichés like “you got this” unless you make it fr
     const message = (result.text || "").trim().replace(/^["']|["']$/g, "");
     return { ok: true as const, message };
   });
+
+export const supportChat = createServerFn({ method: "POST" })
+  .validator(
+    z.object({
+      apiKey: apiKeySchema,
+      message: z.string().trim().min(1).max(8000),
+      history: z
+        .array(
+          z.object({
+            role: z.enum(["user", "assistant"]),
+            content: z.string().max(4000),
+          }),
+        )
+        .max(8)
+        .optional(),
+    }),
+  )
+  .handler(async ({ data }) => {
+    const system = `You are a friendly, helpful assistant. Answer questions about ATS Align (a resume-to-job alignment app) or any other topic the user asks about.
+
+Rules:
+- Answer the user's actual question directly.
+- Do NOT offer, suggest, or ask whether they need help getting a Gemini API key unless they explicitly ask about keys or setup.
+- Do not end replies with "Would you like help getting your API key?" or similar.
+- Plain text only. No markdown, no **bold**, no bullet markers.
+- Be concise and warm. If you do not know an app-specific detail, say so rather than inventing features.`;
+
+    const history = (data.history ?? []).slice(-6).map((h) => ({
+      role: h.role as "user" | "assistant",
+      content: h.content,
+    }));
+
+    const { geminiChat } = await import("./gemini.server");
+    const result = await geminiChat({
+      apiKey: data.apiKey,
+      messages: [
+        { role: "system", content: system },
+        ...history,
+        { role: "user", content: data.message },
+      ],
+      maxTokens: 900,
+      temperature: 0.7,
+    });
+
+    if (!result.ok) {
+      return { ok: false as const, error: result.error || "Could not reach Gemini." };
+    }
+    return { ok: true as const, reply: result.text.trim() };
+  });

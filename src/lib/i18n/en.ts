@@ -91,6 +91,11 @@ export const en = {
   fallbackHelp: "I can help you get a Gemini API key. Use the buttons above, or paste a key that looks like a long string of letters and numbers and I’ll save it for you.",
   openSupport: "Open support",
   pasteKeyPlaceholder: "Paste your Gemini key here…",
+  liveChatReady: "You're all set. Ask me anything — about this app, your resume, or whatever else is on your mind.",
+  askAnythingPlaceholder: "Ask me anything…",
+  liveChatError: "I couldn't reach Gemini just now. Please try again in a moment.",
+  needKeyHelp: "Need help with a key?",
+  getMyKey: "Get my key",
 
   // Common
   close: "Close",

@@ -80,5 +80,10 @@ export const ja: Record<TranslationKey, string> = {
   fallbackHelp: "Gemini APIキーの取得をお手伝いできます。上のボタンを使うか、文字と数字の長い文字列のように見えるキーを貼り付けてください。保存します。",
   openSupport: "サポートを開く",
   pasteKeyPlaceholder: "ここにGeminiキーを貼り付けて…",
+  liveChatReady: "準備完了です。アプリのこと、履歴書のこと、その他何でも聞いてください。",
+  askAnythingPlaceholder: "何でも聞いてください…",
+  liveChatError: "今 Gemini に接続できませんでした。少し待ってからもう一度お試しください。",
+  needKeyHelp: "キーのヘルプが必要？",
+  getMyKey: "キーを取得",
   close: "閉じる",
 };

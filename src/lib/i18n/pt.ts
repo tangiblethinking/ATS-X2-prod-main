@@ -80,5 +80,10 @@ export const pt: Record<TranslationKey, string> = {
   fallbackHelp: "Posso ajudar você a obter uma chave de API do Gemini. Use os botões acima ou cole uma chave que pareça uma longa sequência de letras e números e eu a salvarei para você.",
   openSupport: "Abrir suporte",
   pasteKeyPlaceholder: "Cole sua chave Gemini aqui…",
+  liveChatReady: "Tudo pronto. Pergunte o que quiser — sobre este app, seu currículo ou qualquer outra coisa.",
+  askAnythingPlaceholder: "Pergunte qualquer coisa…",
+  liveChatError: "Não consegui falar com o Gemini agora. Tente novamente em instantes.",
+  needKeyHelp: "Precisa de ajuda com uma chave?",
+  getMyKey: "Obter minha chave",
   close: "Fechar",
 };

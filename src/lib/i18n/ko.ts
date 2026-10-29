@@ -80,5 +80,10 @@ export const ko: Record<TranslationKey, string> = {
   fallbackHelp: "Gemini API 키를 얻는 데 도움을 드릴 수 있습니다. 위의 버튼을 사용하거나 문자와 숫자의 긴 문자열처럼 보이는 키를 붙여넣으면 저장해 드리겠습니다.",
   openSupport: "지원 열기",
   pasteKeyPlaceholder: "여기에 Gemini 키를 붙여넣으세요…",
+  liveChatReady: "준비되었습니다. 이 앱, 이력서, 그 외 무엇이든 물어보세요.",
+  askAnythingPlaceholder: "무엇이든 물어보세요…",
+  liveChatError: "지금 Gemini에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.",
+  needKeyHelp: "키 도움이 필요하신가요?",
+  getMyKey: "내 키 받기",
   close: "닫기",
 };

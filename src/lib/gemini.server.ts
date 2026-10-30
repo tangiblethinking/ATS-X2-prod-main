@@ -86,6 +86,8 @@ function buildPayload(opts: {
   maxTokens: number;
   temperature: number;
   json?: boolean;
+  urlContext?: boolean;
+  images?: { mimeType: string; data: string }[];
 }): Record<string, unknown> {
   const systemParts = opts.messages
     .filter((m) => m.role === "system")
@@ -93,10 +95,21 @@ function buildPayload(opts: {
     .filter(Boolean);
   const contents = opts.messages
     .filter((m) => m.role !== "system")
-    .map((m) => ({
-      role: m.role === "assistant" ? "model" : "user",
-      parts: [{ text: m.content }],
-    }));
+    .map((m, idx, arr) => {
+      const parts: Record<string, unknown>[] = [{ text: m.content }];
+      const isLastUser = m.role === "user" && idx === arr.length - 1;
+      if (isLastUser && opts.images?.length) {
+        for (const img of opts.images) {
+          parts.push({
+            inline_data: { mime_type: img.mimeType, data: img.data },
+          });
+        }
+      }
+      return {
+        role: m.role === "assistant" ? "model" : "user",
+        parts,
+      };
+    });
 
   const payload: Record<string, unknown> = {
     contents,
@@ -115,6 +128,10 @@ function buildPayload(opts: {
     };
   }
 
+  if (opts.urlContext) {
+    payload.tools = [{ url_context: {} }];
+  }
+
   return payload;
 }
 
@@ -128,6 +145,8 @@ export async function geminiChat(opts: {
   maxTokens: number;
   temperature: number;
   json?: boolean;
+  urlContext?: boolean;
+  images?: { mimeType: string; data: string }[];
 }): Promise<ChatResult> {
   const payload = buildPayload(opts);
   const inputChars = estimateInputChars(opts.messages);

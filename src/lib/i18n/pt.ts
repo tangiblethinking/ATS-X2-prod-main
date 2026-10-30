@@ -81,7 +81,7 @@ export const pt: Record<TranslationKey, string> = {
   openSupport: "Abrir suporte",
   pasteKeyPlaceholder: "Cole sua chave Gemini aqui…",
   liveChatReady: "Tudo pronto. Pergunte o que quiser — sobre este app, seu currículo ou qualquer outra coisa.",
-  askAnythingPlaceholder: "Pergunte qualquer coisa…",
+  askAnythingPlaceholder: "Pergunte qualquer coisa, ou cole um link…",
   liveChatError: "Não consegui falar com o Gemini agora. Tente novamente em instantes.",
   needKeyHelp: "Precisa de ajuda com uma chave?",
   getMyKey: "Obter minha chave",

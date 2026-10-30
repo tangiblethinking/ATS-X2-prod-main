@@ -496,16 +496,58 @@ Be specific and human. No clichés like “you got this” unless you make it fr
     return { ok: true as const, message };
   });
 
+const URL_RE = /https?:\/\/[^\s<>"')\]]+/gi;
+const IMAGE_EXT = /\.(png|jpe?g|webp|gif|bmp)(\?.*)?$/i;
+
+function isPrivateHost(hostname: string): boolean {
+  const h = hostname.toLowerCase();
+  if (h === "localhost" || h.endsWith(".local") || h === "metadata.google.internal") return true;
+  if (h === "::1" || h.startsWith("fe80:") || h.startsWith("fc") || h.startsWith("fd")) return true;
+  const m = h.match(/^(\d+)\.(\d+)\.(\d+)\.(\d+)$/);
+  if (!m) return false;
+  const a = Number(m[1]);
+  const b = Number(m[2]);
+  if (a === 10 || a === 127 || a === 0) return true;
+  if (a === 169 && b === 254) return true;
+  if (a === 172 && b >= 16 && b <= 31) return true;
+  if (a === 192 && b === 168) return true;
+  return false;
+}
+
+async function fetchPublicImage(url: string): Promise<{ mimeType: string; data: string } | null> {
+  try {
+    const parsed = new URL(url);
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return null;
+    if (isPrivateHost(parsed.hostname)) return null;
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 15000);
+    const res = await fetch(url, {
+      signal: controller.signal,
+      headers: { "User-Agent": "ATS-Align-Support/1.0" },
+      redirect: "follow",
+    });
+    clearTimeout(timeout);
+    if (!res.ok) return null;
+    const ct = (res.headers.get("content-type") || "").split(";")[0].trim().toLowerCase();
+    if (!ct.startsWith("image/")) return null;
+    const buf = Buffer.from(await res.arrayBuffer());
+    if (buf.length === 0 || buf.length > 5_000_000) return null;
+    return { mimeType: ct, data: buf.toString("base64") };
+  } catch {
+    return null;
+  }
+}
+
 export const supportChat = createServerFn({ method: "POST" })
   .validator(
     z.object({
       apiKey: apiKeySchema,
-      message: z.string().trim().min(1).max(8000),
+      message: z.string().trim().min(1).max(60000),
       history: z
         .array(
           z.object({
             role: z.enum(["user", "assistant"]),
-            content: z.string().max(4000),
+            content: z.string().max(8000),
           }),
         )
         .max(8)
@@ -513,6 +555,46 @@ export const supportChat = createServerFn({ method: "POST" })
     }),
   )
   .handler(async ({ data }) => {
+    const htmlStart = data.message.search(/<!DOCTYPE|<html[\s>]/i);
+    const question = (htmlStart > 0 ? data.message.slice(0, htmlStart) : data.message).trim();
+    const resumeText =
+      htmlStart > 0
+        ? data.message
+            .slice(htmlStart)
+            .replace(/<style[\s\S]*?<\/style>/gi, " ")
+            .replace(/<script[\s\S]*?<\/script>/gi, " ")
+            .replace(/<[^>]+>/g, " ")
+            .replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">")
+            .replace(/&nbsp;/g, " ")
+            .replace(/\s+/g, " ")
+            .trim()
+            .slice(0, 12000)
+        : "";
+
+    const cleanUrl = (raw: string) => raw.replace(/[.,;:!?]+$/g, "");
+    const questionUrls = Array.from(question.match(URL_RE) || []).map(cleanUrl);
+    const imageCandidates = questionUrls.filter((u) => IMAGE_EXT.test(u));
+    const pageUrls = questionUrls.filter(
+      (u) => !IMAGE_EXT.test(u) && !u.includes("fonts.googleapis.com"),
+    );
+
+    const images: { mimeType: string; data: string }[] = [];
+    const previewUrls: string[] = [];
+    const unreadImages: string[] = [];
+    for (const u of imageCandidates.slice(0, 2)) {
+      const img = await fetchPublicImage(u);
+      if (img) {
+        images.push(img);
+        previewUrls.push(u);
+      } else {
+        unreadImages.push(u);
+      }
+    }
+    const contextUrls = [...pageUrls, ...unreadImages].slice(0, 2);
+    const prompt = resumeText
+      ? `${question}\n\nResume content pasted by the user:\n${resumeText}`
+      : data.message;
+
     const system = `You are a friendly, helpful assistant. Answer questions about ATS Align (a resume-to-job alignment app) or any other topic the user asks about.
 
 Rules:
@@ -520,7 +602,11 @@ Rules:
 - Do NOT offer, suggest, or ask whether they need help getting a Gemini API key unless they explicitly ask about keys or setup.
 - Do not end replies with "Would you like help getting your API key?" or similar.
 - Plain text only. No markdown, no **bold**, no bullet markers.
-- Be concise and warm. If you do not know an app-specific detail, say so rather than inventing features.`;
+- Be concise and warm. If you do not know an app-specific detail, say so rather than inventing features.
+- If the user includes a URL, use the linked page content (or the attached image) to answer.
+- If an image is attached, describe what you actually see. Do not invent details.
+- If a link cannot be read, say so clearly.
+- If resume content is included, compare it directly to the job posting. Name specific matches and gaps. Do not invent experience.`;
 
     const history = (data.history ?? []).slice(-6).map((h) => ({
       role: h.role as "user" | "assistant",
@@ -528,19 +614,31 @@ Rules:
     }));
 
     const { geminiChat } = await import("./gemini.server");
-    const result = await geminiChat({
+    const chatMessages = [
+      { role: "system" as const, content: system },
+      ...history,
+      { role: "user" as const, content: prompt },
+    ];
+    let result = await geminiChat({
       apiKey: data.apiKey,
-      messages: [
-        { role: "system", content: system },
-        ...history,
-        { role: "user", content: data.message },
-      ],
-      maxTokens: 900,
+      messages: chatMessages,
+      maxTokens: 1200,
       temperature: 0.7,
+      urlContext: contextUrls.length > 0,
+      images: images.length ? images : undefined,
     });
+    if (!result.ok && contextUrls.length > 0) {
+      result = await geminiChat({
+        apiKey: data.apiKey,
+        messages: chatMessages,
+        maxTokens: 1200,
+        temperature: 0.7,
+        images: images.length ? images : undefined,
+      });
+    }
 
     if (!result.ok) {
       return { ok: false as const, error: result.error || "Could not reach Gemini." };
     }
-    return { ok: true as const, reply: result.text.trim() };
+    return { ok: true as const, reply: result.text.trim(), images: previewUrls };
   });

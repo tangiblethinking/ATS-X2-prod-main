@@ -92,7 +92,7 @@ export const en = {
   openSupport: "Open support",
   pasteKeyPlaceholder: "Paste your Gemini key here…",
   liveChatReady: "You're all set. Ask me anything — about this app, your resume, or whatever else is on your mind.",
-  askAnythingPlaceholder: "Ask me anything…",
+  askAnythingPlaceholder: "Ask me anything, or paste a link…",
   liveChatError: "I couldn't reach Gemini just now. Please try again in a moment.",
   needKeyHelp: "Need help with a key?",
   getMyKey: "Get my key",

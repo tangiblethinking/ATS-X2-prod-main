@@ -81,7 +81,7 @@ export const ja: Record<TranslationKey, string> = {
   openSupport: "サポートを開く",
   pasteKeyPlaceholder: "ここにGeminiキーを貼り付けて…",
   liveChatReady: "準備完了です。アプリのこと、履歴書のこと、その他何でも聞いてください。",
-  askAnythingPlaceholder: "何でも聞いてください…",
+  askAnythingPlaceholder: "何でも聞くか、リンクを貼ってください…",
   liveChatError: "今 Gemini に接続できませんでした。少し待ってからもう一度お試しください。",
   needKeyHelp: "キーのヘルプが必要？",
   getMyKey: "キーを取得",

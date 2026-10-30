@@ -81,7 +81,7 @@ export const ko: Record<TranslationKey, string> = {
   openSupport: "지원 열기",
   pasteKeyPlaceholder: "여기에 Gemini 키를 붙여넣으세요…",
   liveChatReady: "준비되었습니다. 이 앱, 이력서, 그 외 무엇이든 물어보세요.",
-  askAnythingPlaceholder: "무엇이든 물어보세요…",
+  askAnythingPlaceholder: "무엇이든 묻거나 링크를 붙여넣으세요…",
   liveChatError: "지금 Gemini에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.",
   needKeyHelp: "키 도움이 필요하신가요?",
   getMyKey: "내 키 받기",

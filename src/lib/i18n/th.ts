@@ -81,7 +81,7 @@ export const th: Record<TranslationKey, string> = {
   openSupport: "เปิดการสนับสนุน",
   pasteKeyPlaceholder: "วางคีย์ Gemini ของคุณที่นี่…",
   liveChatReady: "พร้อมแล้ว ถามฉันได้ทุกเรื่อง — เกี่ยวกับแอปนี้ เรซูเม่ของคุณ หรือเรื่องอื่น ๆ",
-  askAnythingPlaceholder: "ถามฉันได้ทุกเรื่อง…",
+  askAnythingPlaceholder: "ถามฉันได้ทุกเรื่อง หรือวางลิงก์…",
   liveChatError: "ติดต่อ Gemini ไม่ได้ในตอนนี้ ลองอีกครั้งในอีกสักครู่",
   needKeyHelp: "ต้องการความช่วยเหลือเกี่ยวกับคีย์?",
   getMyKey: "รับคีย์ของฉัน",

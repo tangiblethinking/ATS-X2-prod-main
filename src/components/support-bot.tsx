@@ -1,7 +1,6 @@
-import { useEffect, useRef, useState } from "react";
-import { MessageCircle, X, ChevronRight, Check, ChevronUp, ChevronDown, Languages } from "lucide-react";
+import { useEffect, useRef, useState, type KeyboardEvent } from "react";
+import { MessageCircle, X, ChevronRight, Check, ChevronUp, ChevronDown, Languages, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { isPlausibleApiKey, saveApiKey } from "@/lib/api-key-store";
 import { getEncouragement, supportChat } from "@/lib/optimize";
 import { toast } from "sonner";
@@ -141,6 +140,8 @@ export function SupportBot({ apiKey, onApiKeyChange }: Props) {
   const [step, setStep] = useState<Step>("welcome");
   const [messages, setMessages] = useState<Message[]>([]);
   const [draft, setDraft] = useState("");
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const draftRef = useRef<HTMLTextAreaElement>(null);
   const [hasAutoOpened, setHasAutoOpened] = useState(false);
   const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
   const [encouraging, setEncouraging] = useState(false);
@@ -201,8 +202,11 @@ export function SupportBot({ apiKey, onApiKeyChange }: Props) {
     setIsBotTyping(false);
   }
 
-  function pushUser(text: string) {
-    setMessages((prev) => [...prev, { id: crypto.randomUUID(), from: "user", text }]);
+  function pushUser(text: string, images?: string[]) {
+    setMessages((prev) => [
+      ...prev,
+      { id: crypto.randomUUID(), from: "user", text, images: images?.length ? images : undefined },
+    ]);
   }
 
   function goTo(next: Step) {
@@ -235,22 +239,52 @@ export function SupportBot({ apiKey, onApiKeyChange }: Props) {
     return true;
   }
 
+  useEffect(() => {
+    const el = draftRef.current;
+    if (!el) return;
+    el.style.height = "0px";
+    el.style.height = Math.min(el.scrollHeight, 140) + "px";
+  }, [draft, open]);
+
+  async function copyMessage(id: string, value: string) {
+    if (!value.trim()) return;
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopiedId(id);
+      window.setTimeout(() => {
+        setCopiedId((cur) => (cur === id ? null : cur));
+      }, 1400);
+    } catch {
+      toast.error("Could not copy that message.");
+    }
+  }
+
+  function onDraftKeyDown(e: KeyboardEvent<HTMLTextAreaElement>) {
+    if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+      e.preventDefault();
+      onSend();
+    }
+  }
+
   async function onSend() {
     const text = draft.trim();
     if (!text) return;
     setDraft("");
     if (trySaveKey(text)) return;
-    pushUser(text);
 
     // Live Gemini chat once a key is saved
     if (hasKey) {
       setIsBotTyping(true);
+      const imageUrls = Array.from(text.match(/https?:\/\/[^\s<>"')\]]+/gi) || []).filter((u) =>
+        /\.(png|jpe?g|webp|gif|bmp)(\?.*)?$/i.test(u),
+      );
+      pushUser(text, imageUrls);
       try {
         const history = messages
           .slice(-6)
           .map((m) => ({
             role: m.from === "user" ? ("user" as const) : ("assistant" as const),
-            content: (m.text || (m.textKey ? t(m.textKey) : "")).slice(0, 4000),
+            content: (m.text || (m.textKey ? t(m.textKey) : "")).slice(0, 7000),
           }))
           .filter((m) => m.content.trim().length > 0);
 
@@ -261,15 +295,17 @@ export function SupportBot({ apiKey, onApiKeyChange }: Props) {
           const plain = result.reply.trim().replace(/\*\*/g, "").replace(/^\s*[-*]\s+/gm, "");
           await pushBot({ text: plain });
         } else {
-          await pushBot({ textKey: "liveChatError" });
+          await pushBot({ text: result.error || t("liveChatError") });
         }
-      } catch {
-        await pushBot({ textKey: "liveChatError" });
+      } catch (err) {
+        const detail = err instanceof Error ? err.message : "";
+        await pushBot({ text: detail || t("liveChatError") });
       }
       return;
     }
 
     // No key yet — keep the scripted help path
+    pushUser(text);
     pushBot({ textKey: "fallbackHelp" });
   }
 
@@ -309,11 +345,13 @@ export function SupportBot({ apiKey, onApiKeyChange }: Props) {
 
       {open && (
         <div
-          className={`fixed bottom-4 right-4 z-50 flex w-[min(100vw-2rem,22rem)] flex-col overflow-hidden rounded-2xl border border-border bg-background shadow-2xl sm:w-96 ${
-            isExpanded ? "top-4" : ""
+          className={`fixed right-4 z-50 flex w-[min(100vw-2rem,22rem)] flex-col overflow-hidden rounded-2xl border border-border bg-background shadow-2xl sm:w-96 ${
+            isExpanded
+              ? "bottom-4 top-4 h-[calc(100dvh-2rem)]"
+              : "bottom-4 h-[min(32rem,calc(100dvh-2rem))]"
           }`}
         >
-          <header className="flex items-center justify-between gap-2 border-b border-neutral-800 bg-black px-3 py-2">
+          <header className="flex shrink-0 items-center justify-between gap-2 border-b border-neutral-800 bg-black px-3 py-2">
             <div className="flex items-center gap-2">
               <div
                 className="relative size-10 sm:size-12 shrink-0 cursor-pointer"
@@ -372,29 +410,30 @@ export function SupportBot({ apiKey, onApiKeyChange }: Props) {
 
           <div
             ref={scrollRef}
-            className={`flex flex-1 flex-col gap-3 overflow-y-auto px-3 py-3 text-sm ${
-              isExpanded ? "" : "max-h-80"
-            }`}
+            className="flex min-h-0 flex-1 flex-col gap-3 overflow-x-hidden overflow-y-auto overscroll-contain px-3 py-3 text-sm"
           >
             {messages.map((m) => (
               <div
                 key={m.id}
-                className={`max-w-[85%] rounded-2xl px-3 py-2 ${
+                className={`grid w-full min-w-0 max-w-[85%] grid-cols-[minmax(0,1fr)_auto] items-stretch gap-1.5 rounded-2xl px-3 py-2 ${
                   m.from === "bot"
                     ? "self-start bg-muted text-foreground"
                     : "self-end bg-primary text-primary-foreground"
                 }`}
               >
-                {m.isLanguageSelect ? (
-                  <div className="flex flex-col gap-2">
-                    <div>{t("pleaseSelectLanguage")}</div>
-                    <LanguageSelector variant="inline" />
-                  </div>
-                ) : (
-                  <div className="whitespace-pre-wrap">
-                    {renderMessageText(m.textKey ? t(m.textKey) : m.text || "", t)}
-                  </div>
-                )}
+                <div className="min-w-0 flex-1">
+                  {m.isLanguageSelect ? (
+                    <div className="flex flex-col gap-2">
+                      <div className="whitespace-pre-wrap break-words [overflow-wrap:anywhere]">
+                        {t("pleaseSelectLanguage")}
+                      </div>
+                      <LanguageSelector variant="inline" />
+                    </div>
+                  ) : (
+                    <div className="whitespace-pre-wrap break-words [overflow-wrap:anywhere]">
+                      {renderMessageText(m.textKey ? t(m.textKey) : m.text || "", t)}
+                    </div>
+                  )}
                 {m.images && m.images.length > 0 && (
                   <div className="mt-2 flex flex-col gap-2">
                     {m.images.map((src, idx) => (
@@ -410,6 +449,26 @@ export function SupportBot({ apiKey, onApiKeyChange }: Props) {
                         }}
                       />
                     ))}
+                  </div>
+                )}
+                </div>
+                {!m.isLanguageSelect && (
+                  <div className="relative w-6 self-stretch">
+                    <button
+                      type="button"
+                      className={`sticky top-1 z-10 flex size-6 items-center justify-center rounded-md ${
+                        m.from === "bot"
+                          ? "bg-muted text-muted-foreground hover:bg-background/80"
+                          : "bg-primary text-primary-foreground/90 hover:bg-primary-foreground/15"
+                      }`}
+                      aria-label="Copy message"
+                      title="Copy"
+                      onClick={() =>
+                        copyMessage(m.id, m.textKey ? t(m.textKey) : m.text || "")
+                      }
+                    >
+                      {copiedId === m.id ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
+                    </button>
                   </div>
                 )}
               </div>
@@ -464,21 +523,31 @@ export function SupportBot({ apiKey, onApiKeyChange }: Props) {
           </div>
 
           <form
-            className="flex gap-2 border-t border-border p-2"
+            className="flex shrink-0 items-end gap-2 border-t border-border p-2"
             onSubmit={(e) => {
               e.preventDefault();
               onSend();
             }}
           >
-            <Input
+            <textarea
+              ref={draftRef}
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
+              onKeyDown={onDraftKeyDown}
               placeholder={hasKey ? t("askAnythingPlaceholder") : t("pasteKeyPlaceholder")}
-              className="h-9 text-sm"
+              rows={1}
+              className="min-h-9 max-h-36 w-full flex-1 resize-none overflow-x-hidden overflow-y-auto whitespace-pre-wrap break-words rounded-lg border border-input bg-background px-3 py-2 text-sm leading-5 shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-ring [overflow-wrap:anywhere]"
               autoComplete="off"
               spellCheck={false}
             />
-            <Button type="submit" size="sm" className="h-9" disabled={!draft.trim()}>
+            <Button
+              type="submit"
+              size="sm"
+              className="h-9 shrink-0"
+              disabled={!draft.trim()}
+              title="Send (⌘/Ctrl+Enter)"
+              aria-label="Send message"
+            >
               <Check className="size-4" />
             </Button>
           </form>
